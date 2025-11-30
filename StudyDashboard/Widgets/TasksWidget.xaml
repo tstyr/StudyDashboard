@@ -1,0 +1,65 @@
+<local:DraggableWidget x:Class="StudyDashboard.TasksWidget"
+                   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                   xmlns:local="clr-namespace:StudyDashboard">
+    
+    <Border Style="{StaticResource WidgetStyle}">
+        <StackPanel>
+            <TextBlock Text="Today's Tasks" Style="{StaticResource HeaderTextStyle}"/>
+            
+            <!-- 新しいタスク追加 -->
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBox x:Name="NewTaskTextBox" Grid.Column="0"
+                        Background="#40FFFFFF" Foreground="White" BorderBrush="#60FFFFFF"
+                        Padding="5" Margin="0,0,5,0"
+                        KeyDown="NewTaskTextBox_KeyDown"
+                        Text="Add new task..."/>
+                <Button x:Name="AddTaskButton" Content="Add" Grid.Column="1"
+                       Background="#FF4CAF50" Foreground="White" BorderThickness="0"
+                       Padding="8,5" Click="AddTaskButton_Click"/>
+            </Grid>
+            
+            <!-- タスクリスト -->
+            <ScrollViewer Height="120" VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="TasksPanel">
+                    <!-- サンプルタスク -->
+                    <CheckBox Content="Complete project documentation" 
+                             Foreground="White" Margin="0,2"/>
+                    <CheckBox Content="Review code changes" 
+                             Foreground="White" Margin="0,2"/>
+                    <CheckBox Content="Prepare presentation slides" 
+                             Foreground="White" Margin="0,2" IsChecked="True"/>
+                    <CheckBox Content="Team meeting at 3 PM" 
+                             Foreground="White" Margin="0,2"/>
+                </StackPanel>
+            </ScrollViewer>
+            
+            <!-- 統計 -->
+            <Border Background="#40333333" Margin="0,10,0,0" Padding="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="CompletedTasksText" Text="1/4" 
+                                  FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="Completed" Style="{StaticResource ContentTextStyle}" FontSize="10"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1">
+                        <TextBlock x:Name="RemainingTasksText" Text="3" 
+                                  FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="Remaining" Style="{StaticResource ContentTextStyle}" FontSize="10"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </Border>
+</local:DraggableWidget>
