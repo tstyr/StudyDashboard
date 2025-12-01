@@ -2,6 +2,12 @@
 
 画像と同じ機能を持つWindowsデスクトップアプリケーションです。
 
+## ダウンロード
+
+最新版は [Releases](../../releases) からダウンロードできます。
+
+📦 **[StudyDashboard-v1.1.0-win-x64.zip](../../releases/latest/download/StudyDashboard-v1.1.0-win-x64.zip)** - Windows x64版
+
 ## 機能
 
 ### 🎯 Focus Timer (勉強タイマー)

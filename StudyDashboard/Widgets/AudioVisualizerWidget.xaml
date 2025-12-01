@@ -15,10 +15,10 @@
             <TextBlock Grid.Row="0" Text="Sound Visualizer" Style="{StaticResource HeaderTextStyle}" Margin="0,0,0,5"/>
             
             <!-- スペクトラム表示エリア -->
-            <Canvas x:Name="SpectrumCanvas" Grid.Row="1" Background="Transparent" MinHeight="150"/>
+            <Canvas x:Name="SpectrumCanvas" Grid.Row="1" Background="Transparent" MinHeight="80" Margin="0,0,0,5"/>
             
             <!-- 分析情報ステータス -->
-            <Border Grid.Row="2" Background="#20FFFFFF" CornerRadius="4" Padding="8" Margin="0,8,0,0">
+            <Border x:Name="StatusBorder" Grid.Row="2" Background="#20FFFFFF" CornerRadius="4" Padding="6" Margin="0,5,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -27,24 +27,24 @@
                     </Grid.ColumnDefinitions>
                     
                     <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                        <TextBlock x:Name="DbText" Text="-∞ dB" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Level" FontSize="10" Foreground="#AAFFFFFF" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="DbText" Text="-∞ dB" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="DbLabel" Text="Level" FontSize="9" Foreground="#AAFFFFFF" HorizontalAlignment="Center"/>
                     </StackPanel>
                     
                     <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                        <TextBlock x:Name="PeakFreqText" Text="-- Hz" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Peak Freq" FontSize="10" Foreground="#AAFFFFFF" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="PeakFreqText" Text="-- Hz" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="PeakFreqLabel" Text="Peak Freq" FontSize="9" Foreground="#AAFFFFFF" HorizontalAlignment="Center"/>
                     </StackPanel>
                     
                     <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                        <TextBlock x:Name="FreqRangeText" Text="20-20k Hz" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Range" FontSize="10" Foreground="#AAFFFFFF" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="FreqRangeText" Text="20-20k Hz" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="FreqRangeLabel" Text="Range" FontSize="9" Foreground="#AAFFFFFF" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
             </Border>
             
             <!-- コントロール -->
-            <StackPanel Grid.Row="3" Margin="0,8,0,0">
+            <StackPanel Grid.Row="3" Margin="0,5,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>

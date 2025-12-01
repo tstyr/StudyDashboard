@@ -222,7 +222,7 @@ namespace StudyDashboard
                 {
                     Width = barWidth,
                     Height = 3,
-                    Fill = _isDarkMode ? Brushes.White : Brushes.Black,
+                    Fill = _isDarkMode ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x50, 0x60, 0x80)),
                     RadiusX = 1,
                     RadiusY = 1
                 };
@@ -237,11 +237,27 @@ namespace StudyDashboard
         public void SetTheme(bool isDarkMode)
         {
             _isDarkMode = isDarkMode;
-            var brush = isDarkMode ? Brushes.White : Brushes.Black;
+            // ホワイトモードでもバーは濃い青グレー系に
+            var barBrush = isDarkMode ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x50, 0x60, 0x80));
             foreach (var bar in _spectrumBars)
             {
-                if (bar != null) bar.Fill = brush;
+                if (bar != null) bar.Fill = barBrush;
             }
+            
+            // ステータステキストの色を更新（ホワイトモードでも見やすい濃い色）
+            var textBrush = isDarkMode ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x30, 0x40, 0x50));
+            var labelBrush = isDarkMode ? new SolidColorBrush(Color.FromArgb(0xAA, 0xFF, 0xFF, 0xFF)) 
+                                        : new SolidColorBrush(Color.FromArgb(0x90, 0x50, 0x60, 0x70));
+            DbText.Foreground = textBrush;
+            PeakFreqText.Foreground = textBrush;
+            FreqRangeText.Foreground = textBrush;
+            DbLabel.Foreground = labelBrush;
+            PeakFreqLabel.Foreground = labelBrush;
+            FreqRangeLabel.Foreground = labelBrush;
+            
+            // ステータスボーダーの背景色
+            StatusBorder.Background = isDarkMode ? new SolidColorBrush(Color.FromArgb(0x20, 0xFF, 0xFF, 0xFF))
+                                                 : new SolidColorBrush(Color.FromArgb(0x40, 0x80, 0x90, 0xA8));
         }
 
         private void UpdateTimer_Tick(object? sender, EventArgs e)
