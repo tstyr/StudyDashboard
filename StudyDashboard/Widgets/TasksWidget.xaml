@@ -15,7 +15,8 @@
             <TextBlock Grid.Row="0" Text="Today's Tasks" Style="{StaticResource HeaderTextStyle}"/>
             
             <!-- タスクリスト -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,5">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,5"
+                          Style="{StaticResource DarkScrollViewer}">
                 <StackPanel x:Name="TasksPanel">
                     <CheckBox Content="Complete project documentation" Foreground="White" Margin="0,2"/>
                     <CheckBox Content="Review code changes" Foreground="White" Margin="0,2"/>

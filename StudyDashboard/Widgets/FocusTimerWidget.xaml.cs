@@ -17,8 +17,11 @@ namespace StudyDashboard
         private int _shortBreakDuration = 5;
         private int _longBreakDuration = 15;
         private int _interval = 4;
+        private DateTime _sessionStartTime;
+        private int _lastRecordedMinute = 0;
         
         public event Action<int>? SessionCompleted;
+        public event Action<int>? ElapsedTimeUpdated;
 
         public FocusTimerWidget()
         {
@@ -41,7 +44,9 @@ namespace StudyDashboard
             _isFocusMode = true;
             _totalTime = TimeSpan.FromMinutes(_focusDuration);
             _timeRemaining = _totalTime;
+            _lastRecordedMinute = 0;
             UpdateDisplay();
+            UpdateModeText();
             PauseButton.Content = "Start";
         }
 
@@ -67,6 +72,17 @@ namespace StudyDashboard
         {
             _timeRemaining = _timeRemaining.Subtract(TimeSpan.FromSeconds(1));
             
+            // リアルタイムで経過時間を記録（フォーカスモードのみ、1分ごと）
+            if (_isFocusMode && _isRunning)
+            {
+                var elapsedMinutes = (int)(_totalTime - _timeRemaining).TotalMinutes;
+                if (elapsedMinutes > _lastRecordedMinute)
+                {
+                    _lastRecordedMinute = elapsedMinutes;
+                    ElapsedTimeUpdated?.Invoke(elapsedMinutes);
+                }
+            }
+            
             if (_timeRemaining <= TimeSpan.Zero)
             {
                 _timer.Stop();
@@ -78,20 +94,25 @@ namespace StudyDashboard
                     UpdateModeText();
                     SessionCompleted?.Invoke(_focusDuration);
                     
+                    // 自動でブレークに切り替え
                     if (_completedSessions % _interval == 0)
                     {
-                        MessageBox.Show($"Focus session #{_completedSessions} completed! Time for a long break.", "Timer Complete");
                         SetLongBreakMode();
+                        _timer.Start();
+                        _isRunning = true;
+                        PauseButton.Content = "Pause";
                     }
                     else
                     {
-                        MessageBox.Show($"Focus session #{_completedSessions} completed! Time for a short break.", "Timer Complete");
                         SetShortBreakMode();
+                        _timer.Start();
+                        _isRunning = true;
+                        PauseButton.Content = "Pause";
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Break time is over! Ready for another focus session?", "Break Complete");
+                    // ブレーク終了、フォーカスモードに戻る
                     SetFocusMode();
                 }
             }
@@ -126,6 +147,12 @@ namespace StudyDashboard
             }
             else
             {
+                if (_isFocusMode && _timeRemaining == _totalTime)
+                {
+                    // 新しいセッション開始
+                    _sessionStartTime = DateTime.Now;
+                    _lastRecordedMinute = 0;
+                }
                 _timer.Start();
                 _isRunning = true;
                 PauseButton.Content = "Pause";

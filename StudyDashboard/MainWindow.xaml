@@ -58,19 +58,15 @@
                 </StackPanel>
             </Grid>
             
-            <!-- フリーレイアウト（スクロールバー非表示、マウスホイールでスクロール） -->
-            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" 
-                          x:Name="MainScrollViewer" Margin="5" PanningMode="Both">
-                <Canvas x:Name="WidgetCanvas" MinWidth="1380" MinHeight="830" ClipToBounds="False"
-                        Background="Transparent">
-                    <local:FocusTimerWidget x:Name="FocusTimer" Width="380" Height="440"/>
-                    <local:AudioVisualizerWidget x:Name="AudioVisualizer" Width="380" Height="300"/>
-                    <local:SessionStatsWidget x:Name="SessionStats" Width="520" Height="750"/>
-                    <local:SoundPlayerWidget x:Name="SoundPlayer" Width="380" Height="520"/>
-                    <local:TasksWidget x:Name="TodaysTasks" Width="380" Height="220"/>
-                    <local:SystemStatusWidget x:Name="SystemStatus" Width="1360" Height="60"/>
-                </Canvas>
-            </ScrollViewer>
+            <!-- フリーレイアウト（スクロールなし、ウィジェット内でスクロール） -->
+            <Canvas x:Name="WidgetCanvas" Grid.Row="1" Margin="5" ClipToBounds="True" Background="Transparent">
+                <local:FocusTimerWidget x:Name="FocusTimer" Width="380" Height="440"/>
+                <local:AudioVisualizerWidget x:Name="AudioVisualizer" Width="380" Height="300"/>
+                <local:SessionStatsWidget x:Name="SessionStats" Width="520" Height="750"/>
+                <local:SoundPlayerWidget x:Name="SoundPlayer" Width="380" Height="520"/>
+                <local:TasksWidget x:Name="TodaysTasks" Width="380" Height="220"/>
+                <local:SystemStatusWidget x:Name="SystemStatus" Width="1360" Height="60"/>
+            </Canvas>
         </Grid>
     </Border>
 </Window>

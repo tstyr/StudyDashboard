@@ -16,10 +16,14 @@ namespace StudyDashboard
         private bool _isResizing;
         private Point _resizeStartPoint;
         private Size _originalSize;
+        private Point _originalPosition;
+        private string _resizeCorner = "";
         private Rectangle? _snapGuide;
         
         private const double SnapThreshold = 25;
         private const double EdgeSnapThreshold = 40;
+
+        private const double ResizeCornerSize = 20;
 
         public DraggableWidget()
         {
@@ -27,19 +31,38 @@ namespace StudyDashboard
             this.MouseLeftButtonUp += DraggableWidget_MouseLeftButtonUp;
             this.MouseMove += DraggableWidget_MouseMove;
             this.MouseRightButtonDown += DraggableWidget_MouseRightButtonDown;
-            this.Cursor = Cursors.SizeAll;
+            this.MouseLeave += DraggableWidget_MouseLeave;
+        }
+
+        private void DraggableWidget_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (!_isDragging && !_isResizing)
+            {
+                this.Cursor = Cursors.Arrow;
+            }
         }
 
         private void DraggableWidget_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             var position = e.GetPosition(this);
             
-            if (position.X > this.ActualWidth - 25 && position.Y > this.ActualHeight - 25)
+            // 四隅のリサイズ判定
+            bool isBottomRight = position.X > this.ActualWidth - ResizeCornerSize && position.Y > this.ActualHeight - ResizeCornerSize;
+            bool isBottomLeft = position.X < ResizeCornerSize && position.Y > this.ActualHeight - ResizeCornerSize;
+            bool isTopRight = position.X > this.ActualWidth - ResizeCornerSize && position.Y < ResizeCornerSize;
+            bool isTopLeft = position.X < ResizeCornerSize && position.Y < ResizeCornerSize;
+            
+            if (isBottomRight || isBottomLeft || isTopRight || isTopLeft)
             {
                 _isResizing = true;
                 _resizeStartPoint = e.GetPosition((UIElement)this.Parent);
                 _originalSize = new Size(this.ActualWidth, this.ActualHeight);
-                this.Cursor = Cursors.SizeNWSE;
+                _originalPosition = new Point(Canvas.GetLeft(this), Canvas.GetTop(this));
+                
+                if (isBottomRight) _resizeCorner = "BR";
+                else if (isBottomLeft) _resizeCorner = "BL";
+                else if (isTopRight) _resizeCorner = "TR";
+                else if (isTopLeft) _resizeCorner = "TL";
             }
             else
             {
@@ -47,6 +70,7 @@ namespace StudyDashboard
                 _lastPosition = e.GetPosition((UIElement)this.Parent);
                 _dragStartPos = new Point(Canvas.GetLeft(this), Canvas.GetTop(this));
                 _dragStartSize = new Size(this.ActualWidth, this.ActualHeight);
+                this.Cursor = Cursors.SizeAll;
                 Canvas.SetZIndex(this, 100);
             }
             
@@ -57,10 +81,18 @@ namespace StudyDashboard
         {
             if (_isDragging && this.Parent is Canvas canvas)
             {
-                ApplySnap(canvas);
                 Canvas.SetZIndex(this, 0);
                 RemoveSnapGuide(canvas);
-                CheckAndResolveOverlaps(canvas);
+                
+                // まず重なりをチェックして入れ替え
+                bool swapped = CheckAndResolveOverlaps(canvas);
+                
+                // 入れ替えがなかった場合のみスナップを適用
+                if (!swapped)
+                {
+                    ApplySnap(canvas);
+                }
+                
                 UpdateCanvasSize(canvas);
             }
             if (_isResizing && this.Parent is Canvas canvas2)
@@ -69,16 +101,21 @@ namespace StudyDashboard
             }
             _isDragging = false;
             _isResizing = false;
-            this.Cursor = Cursors.SizeAll;
+            this.Cursor = Cursors.Arrow;
             this.ReleaseMouseCapture();
         }
 
-        private void CheckAndResolveOverlaps(Canvas canvas)
+        private bool CheckAndResolveOverlaps(Canvas canvas)
         {
             double myL = Canvas.GetLeft(this);
             double myT = Canvas.GetTop(this);
-            double myR = myL + this.ActualWidth;
-            double myB = myT + this.ActualHeight;
+            double myW = this.ActualWidth;
+            double myH = this.ActualHeight;
+            double myR = myL + myW;
+            double myB = myT + myH;
+
+            DraggableWidget? bestMatch = null;
+            double maxOverlapArea = 0;
 
             foreach (UIElement child in canvas.Children)
             {
@@ -86,15 +123,33 @@ namespace StudyDashboard
 
                 double oL = Canvas.GetLeft(other);
                 double oT = Canvas.GetTop(other);
-                double oR = oL + other.ActualWidth;
-                double oB = oT + other.ActualHeight;
+                double oW = other.ActualWidth;
+                double oH = other.ActualHeight;
+                double oR = oL + oW;
+                double oB = oT + oH;
 
                 if (myL < oR && myR > oL && myT < oB && myB > oT)
                 {
-                    // 重なっている - 位置を入れ替え
-                    SwapOrAdjust(canvas, other);
+                    // 重なり面積を計算
+                    double overlapW = Math.Min(myR, oR) - Math.Max(myL, oL);
+                    double overlapH = Math.Min(myB, oB) - Math.Max(myT, oT);
+                    double overlapArea = overlapW * overlapH;
+                    
+                    if (overlapArea > maxOverlapArea)
+                    {
+                        maxOverlapArea = overlapArea;
+                        bestMatch = other;
+                    }
                 }
             }
+
+            // 最も重なりが大きいウィジェットと入れ替え
+            if (bestMatch != null)
+            {
+                SwapWidgets(bestMatch);
+                return true;
+            }
+            return false;
         }
 
         private void ApplySnap(Canvas canvas)
@@ -147,111 +202,37 @@ namespace StudyDashboard
 
         private void AdjustOtherWidgets(Canvas canvas)
         {
-            double myL = Canvas.GetLeft(this);
-            double myT = Canvas.GetTop(this);
-            double myR = myL + this.ActualWidth;
-            double myB = myT + this.ActualHeight;
-
-            var overlapping = new List<DraggableWidget>();
-            
-            foreach (UIElement child in canvas.Children)
-            {
-                if (child == this || !(child is DraggableWidget other) || other.Visibility != Visibility.Visible) continue;
-
-                double oL = Canvas.GetLeft(other);
-                double oT = Canvas.GetTop(other);
-                double oR = oL + other.ActualWidth;
-                double oB = oT + other.ActualHeight;
-
-                // 重なりチェック
-                if (myL < oR && myR > oL && myT < oB && myB > oT)
-                    overlapping.Add(other);
-            }
-
-            foreach (var other in overlapping)
-            {
-                SwapOrAdjust(canvas, other);
-            }
-            
-            // Canvasサイズを更新
+            // リサイズ時は入れ替えしない（サイズ調整のみ）
             UpdateCanvasSize(canvas);
         }
 
         private Point _dragStartPos;
         private Size _dragStartSize;
         
-        private void SwapOrAdjust(Canvas canvas, DraggableWidget other)
+        private void SwapWidgets(DraggableWidget other)
         {
-            double myL = Canvas.GetLeft(this);
-            double myT = Canvas.GetTop(this);
-            double myW = this.ActualWidth;
-            double myH = this.ActualHeight;
-            
+            // 相手の現在の位置とサイズを保存
             double oL = Canvas.GetLeft(other);
             double oT = Canvas.GetTop(other);
             double oW = other.ActualWidth;
             double oH = other.ActualHeight;
 
-            // 重なり量を計算
-            double overlapL = Math.Max(myL, oL);
-            double overlapR = Math.Min(myL + myW, oL + oW);
-            double overlapT = Math.Max(myT, oT);
-            double overlapB = Math.Min(myT + myH, oT + oH);
-            double overlapW = overlapR - overlapL;
-            double overlapH = overlapB - overlapT;
-            double overlapArea = overlapW * overlapH;
-            double otherArea = oW * oH;
-
-            // 50%以上重なっている場合は位置とサイズを入れ替え
-            if (overlapArea > otherArea * 0.5)
-            {
-                // 位置を入れ替え
-                Canvas.SetLeft(other, _dragStartPos.X);
-                Canvas.SetTop(other, _dragStartPos.Y);
-                
-                // サイズも入れ替え
-                other.Width = _dragStartSize.Width;
-                other.Height = _dragStartSize.Height;
-            }
-            else
-            {
-                // 押し出す
-                double pushRight = myL + myW - oL;
-                double pushLeft = oL + oW - myL;
-                double pushDown = myT + myH - oT;
-                double pushUp = oT + oH - myT;
-
-                double minPush = Math.Min(Math.Min(pushRight, pushLeft), Math.Min(pushDown, pushUp));
-
-                if (minPush == pushRight)
-                    Canvas.SetLeft(other, myL + myW + 8);
-                else if (minPush == pushLeft)
-                    Canvas.SetLeft(other, myL - oW - 8);
-                else if (minPush == pushDown)
-                    Canvas.SetTop(other, myT + myH + 8);
-                else
-                    Canvas.SetTop(other, myT - oH - 8);
-            }
+            // 相手を自分の元の位置・サイズに移動
+            Canvas.SetLeft(other, _dragStartPos.X);
+            Canvas.SetTop(other, _dragStartPos.Y);
+            other.Width = _dragStartSize.Width;
+            other.Height = _dragStartSize.Height;
+            
+            // 自分を相手の元の位置・サイズに設定
+            Canvas.SetLeft(this, oL);
+            Canvas.SetTop(this, oT);
+            this.Width = oW;
+            this.Height = oH;
         }
 
         private void UpdateCanvasSize(Canvas canvas)
         {
-            double maxRight = 0;
-            double maxBottom = 0;
-            
-            foreach (UIElement child in canvas.Children)
-            {
-                if (child is DraggableWidget widget && widget.Visibility == Visibility.Visible)
-                {
-                    double r = Canvas.GetLeft(widget) + widget.ActualWidth + 20;
-                    double b = Canvas.GetTop(widget) + widget.ActualHeight + 20;
-                    maxRight = Math.Max(maxRight, r);
-                    maxBottom = Math.Max(maxBottom, b);
-                }
-            }
-            
-            canvas.Width = Math.Max(canvas.MinWidth, maxRight);
-            canvas.Height = Math.Max(canvas.MinHeight, maxBottom);
+            // Canvasサイズは変更しない（ウィンドウサイズに合わせる）
         }
 
         private void ShowSnapGuide(Canvas canvas, double x, double y, double w, double h)
@@ -287,11 +268,20 @@ namespace StudyDashboard
         {
             var position = e.GetPosition(this);
             
-            // リサイズカーソル表示
+            // カーソル表示（ドラッグ・リサイズ中以外）
             if (!_isDragging && !_isResizing)
             {
-                this.Cursor = (position.X > this.ActualWidth - 25 && position.Y > this.ActualHeight - 25) 
-                    ? Cursors.SizeNWSE : Cursors.SizeAll;
+                bool isBottomRight = position.X > this.ActualWidth - ResizeCornerSize && position.Y > this.ActualHeight - ResizeCornerSize;
+                bool isTopLeft = position.X < ResizeCornerSize && position.Y < ResizeCornerSize;
+                bool isBottomLeft = position.X < ResizeCornerSize && position.Y > this.ActualHeight - ResizeCornerSize;
+                bool isTopRight = position.X > this.ActualWidth - ResizeCornerSize && position.Y < ResizeCornerSize;
+                
+                if (isBottomRight || isTopLeft)
+                    this.Cursor = Cursors.SizeNWSE;
+                else if (isBottomLeft || isTopRight)
+                    this.Cursor = Cursors.SizeNESW;
+                else
+                    this.Cursor = Cursors.Arrow;
             }
 
             if (_isDragging && e.LeftButton == MouseButtonState.Pressed && this.Parent is Canvas canvas)
@@ -319,14 +309,48 @@ namespace StudyDashboard
                 var deltaX = currentPosition.X - _resizeStartPoint.X;
                 var deltaY = currentPosition.Y - _resizeStartPoint.Y;
 
-                var newWidth = Math.Max(150, _originalSize.Width + deltaX);
-                var newHeight = Math.Max(100, _originalSize.Height + deltaY);
-
-                var maxWidth = canvas2.ActualWidth - Canvas.GetLeft(this) - 8;
-                var maxHeight = canvas2.ActualHeight - Canvas.GetTop(this) - 8;
+                double newWidth, newHeight, newLeft, newTop;
                 
-                this.Width = Math.Min(newWidth, maxWidth);
-                this.Height = Math.Min(newHeight, maxHeight);
+                switch (_resizeCorner)
+                {
+                    case "BR": // 右下
+                        newWidth = Math.Max(100, _originalSize.Width + deltaX);
+                        newHeight = Math.Max(80, _originalSize.Height + deltaY);
+                        newLeft = _originalPosition.X;
+                        newTop = _originalPosition.Y;
+                        break;
+                    case "BL": // 左下
+                        newWidth = Math.Max(100, _originalSize.Width - deltaX);
+                        newHeight = Math.Max(80, _originalSize.Height + deltaY);
+                        newLeft = _originalPosition.X + _originalSize.Width - newWidth;
+                        newTop = _originalPosition.Y;
+                        break;
+                    case "TR": // 右上
+                        newWidth = Math.Max(100, _originalSize.Width + deltaX);
+                        newHeight = Math.Max(80, _originalSize.Height - deltaY);
+                        newLeft = _originalPosition.X;
+                        newTop = _originalPosition.Y + _originalSize.Height - newHeight;
+                        break;
+                    case "TL": // 左上
+                        newWidth = Math.Max(100, _originalSize.Width - deltaX);
+                        newHeight = Math.Max(80, _originalSize.Height - deltaY);
+                        newLeft = _originalPosition.X + _originalSize.Width - newWidth;
+                        newTop = _originalPosition.Y + _originalSize.Height - newHeight;
+                        break;
+                    default:
+                        return;
+                }
+
+                // 境界チェック
+                newLeft = Math.Max(0, newLeft);
+                newTop = Math.Max(0, newTop);
+                newWidth = Math.Min(newWidth, canvas2.ActualWidth - newLeft - 8);
+                newHeight = Math.Min(newHeight, canvas2.ActualHeight - newTop - 8);
+                
+                Canvas.SetLeft(this, newLeft);
+                Canvas.SetTop(this, newTop);
+                this.Width = newWidth;
+                this.Height = newHeight;
             }
         }
 

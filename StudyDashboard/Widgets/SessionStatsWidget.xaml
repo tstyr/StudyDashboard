@@ -7,23 +7,31 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             
             <!-- ヘッダー -->
             <TextBlock Grid.Row="0" Text="Session Stats" Style="{StaticResource HeaderTextStyle}"/>
             
+            <!-- スクロール可能なコンテンツ -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                          Style="{StaticResource DarkScrollViewer}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+            
             <!-- 日付タイムライン -->
-            <Border Grid.Row="1" Background="#20FFFFFF" CornerRadius="4" Padding="5" Margin="0,0,0,10">
+            <Border Grid.Row="0" Background="#20FFFFFF" CornerRadius="4" Padding="5" Margin="0,0,0,10">
                 <StackPanel x:Name="DateTimeline" Orientation="Horizontal" HorizontalAlignment="Center"/>
             </Border>
             
             <!-- 統計カード 2x2 -->
-            <Grid Grid.Row="2" Margin="0,0,0,10">
+            <Grid Grid.Row="1" Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
@@ -67,7 +75,7 @@
             </Grid>
             
             <!-- This Week 棒グラフ -->
-            <Border Grid.Row="3" Background="#25FFFFFF" CornerRadius="5" Padding="10" Margin="0,0,0,10">
+            <Border Grid.Row="2" Background="#25FFFFFF" CornerRadius="5" Padding="10" Margin="0,0,0,10">
                 <StackPanel>
                     <TextBlock Text="This Week" FontSize="12" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8"/>
                     <Grid Height="100">
@@ -79,7 +87,7 @@
             </Border>
             
             <!-- Recent Sessions -->
-            <Border Grid.Row="4" Background="#25FFFFFF" CornerRadius="5" Padding="10" Margin="0,0,0,10">
+            <Border Grid.Row="3" Background="#25FFFFFF" CornerRadius="5" Padding="10" Margin="0,0,0,10">
                 <StackPanel>
                     <TextBlock Text="Recent Sessions" FontSize="12" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8"/>
                     <StackPanel x:Name="RecentSessionsList"/>
@@ -87,12 +95,14 @@
             </Border>
             
             <!-- Last 7 days detail -->
-            <Border Grid.Row="5" Background="#25FFFFFF" CornerRadius="5" Padding="10">
+            <Border Grid.Row="4" Background="#25FFFFFF" CornerRadius="5" Padding="10">
                 <StackPanel>
                     <TextBlock Text="Last 7 days detail" FontSize="12" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8"/>
                     <StackPanel x:Name="DailyDetailList"/>
                 </StackPanel>
             </Border>
+                </Grid>
+            </ScrollViewer>
         </Grid>
     </Border>
 </local:DraggableWidget>

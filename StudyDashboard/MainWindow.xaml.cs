@@ -27,7 +27,13 @@ namespace StudyDashboard
 
             FocusTimer.SessionCompleted += (duration) =>
             {
+                SessionStats.ResetCurrentSession();
                 SessionStats.AddSession(duration);
+            };
+
+            FocusTimer.ElapsedTimeUpdated += (elapsedMinutes) =>
+            {
+                SessionStats.UpdateElapsedTime(elapsedMinutes);
             };
         }
 

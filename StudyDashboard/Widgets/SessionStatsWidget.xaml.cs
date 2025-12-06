@@ -19,8 +19,15 @@ namespace StudyDashboard
             this.Loaded += (s, e) => RefreshUI();
         }
 
+        private int _currentSessionMinutes = 0;
+        private DateTime? _currentSessionStart = null;
+
         public void AddSession(int durationMinutes, string? taskName = null)
         {
+            // セッション完了時は現在のリアルタイム記録をリセット
+            _currentSessionMinutes = 0;
+            _currentSessionStart = null;
+
             var session = new SessionRecord
             {
                 DateTime = DateTime.Now,
@@ -35,6 +42,32 @@ namespace StudyDashboard
             _dailyMinutes[today] += durationMinutes;
 
             RefreshUI();
+        }
+
+        public void UpdateElapsedTime(int elapsedMinutes)
+        {
+            var today = DateTime.Today;
+            if (!_dailyMinutes.ContainsKey(today))
+                _dailyMinutes[today] = 0;
+
+            // 差分を追加（前回記録からの増分のみ）
+            int increment = elapsedMinutes - _currentSessionMinutes;
+            if (increment > 0)
+            {
+                _dailyMinutes[today] += increment;
+                _currentSessionMinutes = elapsedMinutes;
+                
+                if (_currentSessionStart == null)
+                    _currentSessionStart = DateTime.Now.AddMinutes(-elapsedMinutes);
+                
+                RefreshUI();
+            }
+        }
+
+        public void ResetCurrentSession()
+        {
+            _currentSessionMinutes = 0;
+            _currentSessionStart = null;
         }
 
         public void RefreshUI()
